@@ -1,0 +1,39 @@
+//Basic USB serial implementation on an Arduino
+String data;
+bool DataRead;
+void setup() {
+Serial.begin(115200);
+}
+void loop() {
+
+if data=='A'{
+  degrees=data.toFloat()
+  radians=degrees*pi/180
+  rotate radians}
+  
+if data=='B'{
+
+ move streight data
+}
+
+
+//when ready 
+Serial.println('1')
+if (DataRead) {
+  
+  Serial.print("You sent me: "); //send back confrmation
+  Serial.println(data);
+  DataRead = false;
+}
+//test
+}
+
+
+
+void serialEvent(){ // waits for a input from the usb 
+if (Serial.available() > 0) {
+  data = Serial.readStringUntil('\n'); //sets the sent data as a variable
+  DataRead = true;
+}
+Serial.flush(); //clears the data
+}
