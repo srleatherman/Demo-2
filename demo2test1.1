@@ -149,3 +149,64 @@ void angleRotation(float givenAngle){
   } 
 
 }
+void moveStraight(int feet){
+  dDistance=desiredDistance[feet]; // this is in meters
+  desiredAngle = dDistance/0.05; // 0.05m is equivalent to 1 rad
+  
+  //reads the current state of the encoder in counts
+  currentCountsRight = motorRight.read(); // this is reading the current counts from the encoder
+  currentCountsLeft = motorLeft.read();
+
+  //changes the counts into angle
+  currentAngleRight = (float)currentCountsRight*2*pi/(float)cpr;
+  currentAngleLeft = (float)currentCountsLeft*2*pi/(float)cpr;
+
+  //computes the angle
+  eleft = desiredAngle - currentAngleLeft;
+  eright = desiredAngle - currentAngleRight;
+
+  //computes the desired voltage from the controller. We increased Kp inorder to account for the weight and the friction
+  desiredVoltagel = 3.9*Kp*eleft; ///3.9 for 180 
+  desiredVoltager = 3.9*Kp*eright;
+
+  //makes the voltage into a pwm value that the pin can understand
+  desiredVoltagePWMl = (float)desiredVoltagel*255/7.5;
+  desiredVoltagePWMr = (float)desiredVoltager*255/7.5;
+
+  //determines the direction of the left wheel
+  if( desiredVoltagePWMl <0){
+    //if it is less than zero it is negative
+    digitalWrite(signOfVoltLeft,true);
+  }else{
+    //if it is greater than zero it is positive
+    
+    digitalWrite(signOfVoltLeft, false);
+  } 
+  //determines the direction of the right wheel
+  if( desiredVoltagePWMr <0){
+    //if it is less than zero it is negative
+    digitalWrite(signOfVoltage, false);
+  }else{
+    //if it is greater than zero it is positive
+    digitalWrite(signOfVoltage, true);
+  } 
+  
+  controlSignall = abs(desiredVoltagePWMl);
+  controlSignalr = abs(desiredVoltagePWMr);
+
+  //makes sure there is no over saturation
+  if(controlSignall >255){
+    controlSignall = 255;
+  }
+  if(controlSignalr >255){
+    controlSignalr = 255;
+  }
+ 
+  if(abs(eleft) <0.94 || abs(eright)<0.94){
+    analogWrite(motorVoltageLeft,0); 
+    analogWrite(motorVoltageRight,0);
+  }else{
+    analogWrite(motorVoltageLeft,controlSignall); 
+    analogWrite(motorVoltageRight,controlSignall); 
+  }
+}
