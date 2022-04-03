@@ -31,9 +31,19 @@ if (DataRead) {
 
 
 void serialEvent(){ // waits for a input from the usb 
-if (Serial.available() > 0) {
-  data = Serial.readStringUntil('\n'); //sets the sent data as a variable
-  DataRead = true;
+  if (Serial.available() > 0) {
+    if (!state){
+      mode = Serial.readStringUntil('\n'); //sets the sent data as a variable
+      DataRead = true;
+      state=true;
+     }
+    else if (state){
+      data = Serial.readStringUntil('\n'); //sets the sent data as a variable
+      DataRead = true;
+      recived=data.toFloat();
+      state=false;
+    }
 }
 Serial.flush(); //clears the data
 }
+
