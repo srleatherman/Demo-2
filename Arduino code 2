@@ -81,7 +81,7 @@ void loop() {
       Serial.println();
       moveStraight(sra);}
   }
- else{  
+  else{  
     Serial.println("1");
     delay(1000);
     Serial.println(mode);
@@ -91,24 +91,18 @@ void loop() {
     if (!state){
       mode = Serial.readStringUntil('\n'); //sets the sent data as a variable
       state=true;
-     }
+    }
     else if (state){
       data = Serial.readStringUntil('\n'); //sets the sent data as a variable
       angleRec=data.toFloat();
       state=false;
       if (data !=0){
       degreeWant = angleRec;
-      }}
-  nextCase=false;}
-  }
-  /*
-  if(!nextCase) {
-    angleRotation(degreeWant);
+      }
     }
-  else if(nextCase) {
-    Serial.println('1');
+    nextCase=false;
   }
-  */
+  }
   //delay(100); // delay between loops so that it is not running continuously
 
 void angleRotation(float givenAngle){
@@ -236,7 +230,8 @@ void moveStraight(int feet){
     analogWrite(motorVoltageRight,0);
     nextCase = true;// makes it go from the rotating function to the going straight function
   }else{
-    analogWrite(motorVoltageLeft,controlSignall);     analogWrite(motorVoltageRight,controlSignall); 
+    analogWrite(motorVoltageLeft,controlSignall);     
+    analogWrite(motorVoltageRight,controlSignall); 
   }
   
 }
