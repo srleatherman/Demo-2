@@ -114,7 +114,7 @@ void loop() {
 void angleRotation(float givenAngle){
   
   distanceRotate = float(givenAngle)/float(20);
-  desiredAngle = 2*pi*.26*180*distanceRotate/360; // 0.05m is equivalent to 1 rad
+  desiredAngle = 2*pi*.28*180*distanceRotate/360; // 0.05m is equivalent to 1 rad
   
   //reads the current state of the encoder in counts
   currentCountsRight = motorRight.read(); // this is reading the current counts from the encoder
@@ -165,7 +165,7 @@ void angleRotation(float givenAngle){
   if(controlSignalr >255){
     controlSignalr = 255;
   }
-  if(abs(eleft) <.2 || abs(eright)<.2){ //1 for 180
+  if(abs(eleft) <.7 || abs(eright)<.7){ //1 for 180
     analogWrite(motorVoltageLeft,0); 
     analogWrite(motorVoltageRight,0);
     nextCase = true;// makes it go from the rotating function to the going straight function
@@ -173,8 +173,8 @@ void angleRotation(float givenAngle){
     motorLeft.write(0);
     delay(10);// delay added so there is a break between rotating and moving straight.
   }else{
-    analogWrite(motorVoltageLeft, controlSignall); //the left wheel moves slower so this is how we improvised that. Increased the voltage    
-    analogWrite(1.2*motorVoltageRight, controlSignalr); 
+    analogWrite(motorVoltageLeft, 1.2*controlSignall); //the left wheel moves slower so this is how we improvised that. Increased the voltage    
+    analogWrite(motorVoltageRight, controlSignalr); 
   } 
 
 }
