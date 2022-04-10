@@ -23,7 +23,7 @@ float desiredVoltagePWMl;
 float desiredVoltagePWMr;
 float eleft;
 float eright;
-float Kp = .8;
+float Kp = .2;
 bool nextCase= false;
 
 int currentCountsRight;
@@ -218,7 +218,7 @@ void moveStraight(float feet){
     controlSignalr = 255;
   }
  
-  if(abs(eleft) <0.05 || abs(eright)<0.05){
+  if(abs(eleft) <0.94 || abs(eright)<0.94){
     analogWrite(motorVoltageLeft,0); 
     analogWrite(motorVoltageRight,0);
     nextCase = true;// makes it go from runing the motors to waiting for input
