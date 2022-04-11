@@ -1,0 +1,273 @@
+
+#include "Encoder.h" //this gives us access to the encoder.h files 
+#define output2A 3 //this pin is output A for the encoder motor 2
+#define output2B 6 //this pin is output B for the encoder motor 2
+#define outputA 5 //this pin is output A for the encoder motor 1
+#define outputB 2 // this pin is output B for the encoder motor 1
+#define motorVoltageRight 9 //this is one of the two voltage pwm pins we could have picked
+#define motorVoltageLeft 10//thi is for the second motor voltage and a pwm pin
+#define button 4 // this pin is for setting the interupt
+#define signOfVoltage 7 // this is what direction the wheel will turn motor 1
+#define signOfVoltLeft 8
+#define flagIndicator 12 // this pin is if there is a flag
+
+Encoder motorRight(outputA, outputB);
+Encoder motorLeft(output2A, output2B);
+
+int loopcount = 0;
+int feet=1;
+float controlSignall=0;
+float controlSignalr=0;
+float desiredVoltagel;
+float desiredVoltager;
+float desiredVoltagePWMl;
+float desiredVoltagePWMr;
+float eleft;
+float eright;
+float Kp = .2;
+bool nextCase= false;
+bool newCase= false;
+int currentCountsRight;
+int currentCountsLeft;
+float currentAngleRight;
+float currentAngleLeft;
+float dDistance;
+int sra;
+float desiredDistance[] = {0.3048,.6, 0.72, 0.85, .99,1.51,1.95, 2.05};
+float distanceRotate;
+float desiredAngle =0;
+float degreeWant=81;//87;//-97
+
+float pi = 3.1415;
+int cpr = 3200;
+bool tapeDec = false;
+float piAngle=0;
+float angleRec=0;
+String data="";
+bool DataRead;
+bool state= false;
+String mode="A";
+bool time1=true;
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(19200);
+  //set up all of my output pins 
+  pinMode(button, OUTPUT);
+  digitalWrite(button, HIGH);
+  
+  pinMode(signOfVoltage,OUTPUT);
+  digitalWrite(signOfVoltage, HIGH);
+
+  pinMode(signOfVoltLeft,OUTPUT);
+  digitalWrite(signOfVoltLeft, HIGH);
+  
+  pinMode(motorVoltageRight, OUTPUT);
+  analogWrite(motorVoltageRight, 0);
+  
+  pinMode(motorVoltageLeft, OUTPUT);
+  analogWrite(motorVoltageLeft, 0);
+  
+  //set all of my input pins
+  pinMode(flagIndicator, INPUT);
+}
+
+void loop() {
+  if (!newCase){
+   if (mode=="A"){
+      angleRotation(degreeWant);}
+
+    if (mode=="B"){
+      Kp = .2;
+      moveStraight(0.72);
+     // Serial.println("fucking working");
+    }
+    if (mode=="C"){
+      Kp = .2;
+      moveStraight(1);
+     Serial.println("working");
+    }
+      
+  }
+  else if (mode=="A"){  
+    Serial.println("1");
+    while(Serial.available() == 0) {
+  }
+     
+    //Serial.println(degreeWant);
+  newCase=false;}
+  if (mode=="C" && newCase==true&& time1==true){
+    motorRight.write(0);
+    motorLeft.write(0);
+  newCase=false;
+  time1=false;
+    }
+  delay(500);
+ }
+ 
+  //delay(100); // delay between loops so that it is not running continuously
+
+void angleRotation(float givenAngle){
+  distanceRotate = float(givenAngle)/float(20);
+  desiredAngle = 2*pi*.28*180*distanceRotate/360; // 0.05m is equivalent to 1 rad
+  
+  //reads the current state of the encoder in counts
+  currentCountsRight = motorRight.read(); // this is reading the current counts from the encoder
+  currentCountsLeft = motorLeft.read();
+  
+  //this changes the counts into the anguluar position
+  currentAngleRight = (float)currentCountsRight*2*pi/(float)cpr;
+  currentAngleLeft = (float)currentCountsLeft*2*pi/(float)cpr;
+
+  //finds the error between the wheels
+  eleft = desiredAngle - currentAngleLeft;
+  eright = desiredAngle + currentAngleRight;
+
+  //finds the voltage using the controller. the 2.5 is the adjustment we had to make from the simulink model to the actual implementation
+  desiredVoltagel = 2.5*Kp*eleft;
+  desiredVoltager = 2.5*Kp*eright;
+
+  //makes the voltage into a pwm value that the pin can understand
+  desiredVoltagePWMl = (float)desiredVoltagel*255/7.5;
+  desiredVoltagePWMr = (float)desiredVoltager*255/7.5;
+
+  //determines direction that the left wheel turns
+  if( desiredVoltagePWMl <0){
+    //if it is less than zero it is negative
+    digitalWrite(signOfVoltLeft,false);
+    
+  }else{
+    //if it is greater than zero it is positive
+    digitalWrite(signOfVoltLeft, true);
+  } 
+  
+  //determines the direction that the right wheel turns
+  if( desiredVoltagePWMr <0){
+    //if it is less than zero it is negative
+    digitalWrite(signOfVoltage, false);
+  }else{
+    //if it is greater than zero it is positive
+    digitalWrite(signOfVoltage, true);
+  } 
+  
+  controlSignall = abs(desiredVoltagePWMl);
+  controlSignalr = abs(desiredVoltagePWMr);
+
+  //makes sure that the PWM is not larger that 255
+   if(controlSignall <40){
+    controlSignall = 50;
+  }
+  if(controlSignalr <40){
+    controlSignalr =50;
+  }
+  if(controlSignall <20){
+    controlSignall = 90;
+  }
+  if(controlSignalr <20){
+    controlSignalr =90;
+  }
+  if(controlSignall >255){
+    controlSignall = 255;
+  }
+  if(controlSignalr >255){
+    controlSignalr = 255;
+  }
+  if(abs(eleft) <.7 || abs(eright)<.7){ //1 for 180
+    analogWrite(motorVoltageLeft,0); 
+    analogWrite(motorVoltageRight,0);
+    newCase = true;// makes it go from runing the motors to waiting for input
+    motorRight.write(0);
+    motorLeft.write(0);
+    delay(10);// delay added so there is a break between rotating and moving straight.
+  }else{
+    analogWrite(motorVoltageLeft, 1.2*controlSignall); //the left wheel moves slower so this is how we improvised that. Increased the voltage    
+    analogWrite(motorVoltageRight, controlSignalr); 
+  } 
+
+}
+void moveStraight(float feet){
+  Kp=.2;
+  dDistance=feet; // this is in meters
+  desiredAngle = dDistance/0.05; // 0.05m is equivalent to 1 rad
+  
+  //reads the current state of the encoder in counts
+  currentCountsRight = motorRight.read(); // this is reading the current counts from the encoder
+  currentCountsLeft = motorLeft.read();
+
+  //changes the counts into angle
+  currentAngleRight = (float)currentCountsRight*2*pi/(float)cpr;
+  currentAngleLeft = (float)currentCountsLeft*2*pi/(float)cpr;
+
+  //computes the angle
+  eleft = desiredAngle - currentAngleLeft;
+  eright = desiredAngle - currentAngleRight;
+
+  //computes the desired voltage from the controller. We increased Kp inorder to account for the weight and the friction
+  desiredVoltagel = 3.9*Kp*eleft; ///3.9 for 180 
+  desiredVoltager = 3.9*Kp*eright;
+
+  //makes the voltage into a pwm value that the pin can understand
+  desiredVoltagePWMl = 0.8*(float)desiredVoltagel*255/7.5;
+  desiredVoltagePWMr = (float)desiredVoltager*255/7.5;
+
+  //determines the direction of the left wheel
+  if( desiredVoltagePWMl <0){
+    //if it is less than zero it is negative
+    digitalWrite(signOfVoltLeft,true);
+  }else{
+    //if it is greater than zero it is positive
+    
+    digitalWrite(signOfVoltLeft, false);
+  } 
+  //determines the direction of the right wheel
+  if( desiredVoltagePWMr <0){
+    //if it is less than zero it is negative
+    digitalWrite(signOfVoltage, false);
+  }else{
+    //if it is greater than zero it is positive
+    digitalWrite(signOfVoltage, true);
+  } 
+  
+  controlSignall = abs(desiredVoltagePWMl);
+  controlSignalr = abs(desiredVoltagePWMr);
+
+  //makes sure there is no over saturation
+
+
+  if(controlSignall >255){
+    controlSignall = 255;
+  }
+  if(controlSignalr >255){
+    controlSignalr = 255;
+  }
+ 
+  if(abs(eleft) <0.94 || abs(eright)<0.94){
+    analogWrite(motorVoltageLeft,0); 
+    analogWrite(motorVoltageRight,0);
+    newCase=true;
+    
+  }else{
+    analogWrite(motorVoltageLeft,controlSignalr); 
+    analogWrite(motorVoltageRight,controlSignall); 
+  }
+}
+void serialEvent(){ // waits for a input from the usb 
+if (!state){
+      mode = Serial.readStringUntil('\n'); //sets the sent data as a variable
+      if(mode=="A"){
+      state=true;}
+    Serial.flush(); //clears the data 
+    }
+     
+     delay(100);
+    if (state){
+      data = Serial.readStringUntil('\n'); //sets the sent data as a variable
+      angleRec=data.toFloat();
+      state=false;
+      if (data !="0.00"){
+      degreeWant = angleRec;
+      Kp = .7;
+      }
+Serial.flush(); //clears the data
+}
+}
