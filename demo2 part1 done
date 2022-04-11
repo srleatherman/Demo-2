@@ -33,10 +33,10 @@ float currentAngleRight;
 float currentAngleLeft;
 float dDistance;
 int sra;
-float desiredDistance[] = {0.3048,.6, 0.7, 0.85, .99,1.51,1.95, 2.05};
+float desiredDistance[] = {0.3048,.6, 0.72, 0.85, .99,1.51,1.95, 2.05};
 float distanceRotate;
 float desiredAngle =0;
-float degreeWant=45;//87;//-97
+float degreeWant=81;//87;//-97
 
 float pi = 3.1415;
 int cpr = 3200;
@@ -78,20 +78,21 @@ void loop() {
       angleRotation(degreeWant);}
 
     if (mode=="B"){
-     // Kp = .2;
-      moveStraight(1);
+      Kp = .2;
+      moveStraight(2);
      // Serial.println("fucking working");
      }
+     
       
   }
   else if (mode=="A"){  
     Serial.println("1");
-    delay(1000);
+    delay(500);
     while(Serial.available() == 0) {
   }
-    
-  newCase=false;
-  Serial.println(mode);}
+     
+    Serial.println(degreeWant);
+  newCase=false;}
   delay(500);
  }
  
@@ -144,11 +145,17 @@ void angleRotation(float givenAngle){
   controlSignalr = abs(desiredVoltagePWMr);
 
   //makes sure that the PWM is not larger that 255
-   if(controlSignall <25){
+   if(controlSignall <40){
     controlSignall = 50;
   }
-  if(controlSignalr <25){
+  if(controlSignalr <40){
     controlSignalr =50;
+  }
+  if(controlSignall <20){
+    controlSignall = 90;
+  }
+  if(controlSignalr <20){
+    controlSignalr =90;
   }
   if(controlSignall >255){
     controlSignall = 255;
@@ -191,7 +198,7 @@ void moveStraight(int feet){
   desiredVoltager = 3.9*Kp*eright;
 
   //makes the voltage into a pwm value that the pin can understand
-  desiredVoltagePWMl = (float)desiredVoltagel*255/7.5;
+  desiredVoltagePWMl = 0.8*(float)desiredVoltagel*255/7.5;
   desiredVoltagePWMr = (float)desiredVoltager*255/7.5;
 
   //determines the direction of the left wheel
@@ -228,11 +235,11 @@ void moveStraight(int feet){
   if(abs(eleft) <0.94 || abs(eright)<0.94){
     analogWrite(motorVoltageLeft,0); 
     analogWrite(motorVoltageRight,0);
-   newCase=true;
+    newCase=true;
     motorRight.write(0);
     motorLeft.write(0);
   }else{
-    analogWrite(motorVoltageLeft,controlSignall); 
+    analogWrite(motorVoltageLeft,controlSignalr); 
     analogWrite(motorVoltageRight,controlSignall); 
   }
 }
@@ -251,7 +258,7 @@ if (!state){
       state=false;
       if (data !="0.00"){
       degreeWant = angleRec;
-      Kp = .7;
+      Kp = .8;
       }
 Serial.flush(); //clears the data
 }
