@@ -36,7 +36,7 @@ int sra;
 float desiredDistance[] = {0.3048,.6, 0.7, 0.85, .99,1.51,1.95, 2.05};
 float distanceRotate;
 float desiredAngle =0;
-float degreeWant=60;//87;//-97
+float degreeWant=45;//87;//-97
 
 float pi = 3.1415;
 int cpr = 3200;
@@ -74,26 +74,26 @@ void setup() {
 
 void loop() {
   if (!newCase){
-   // if (mode=="A"){
-    //  angleRotation(degreeWant);}
+   if (mode=="A"){
+      angleRotation(degreeWant);}
 
-    //if (mode=="B"){
+    if (mode=="B"){
      // Kp = .2;
       moveStraight(1);
-     // Serial.println("fucking working");=
+     // Serial.println("fucking working");
      }
       
   }
- // else{  
-   // Serial.println("1");
-   // delay(1000);
-   // while(Serial.available() == 0) {
-  //}
+  else if (mode=="A"){  
+    Serial.println("1");
+    delay(1000);
+    while(Serial.available() == 0) {
+  }
     
-  //nextCase=false;
-  //Serial.println(mode);}
-  //delay(500);
- //}
+  newCase=false;
+  Serial.println(mode);}
+  delay(500);
+ }
  
   //delay(100); // delay between loops so that it is not running continuously
 
@@ -159,7 +159,7 @@ void angleRotation(float givenAngle){
   if(abs(eleft) <.7 || abs(eright)<.7){ //1 for 180
     analogWrite(motorVoltageLeft,0); 
     analogWrite(motorVoltageRight,0);
-    nextCase = true;// makes it go from runing the motors to waiting for input
+    newCase = true;// makes it go from runing the motors to waiting for input
     motorRight.write(0);
     motorLeft.write(0);
     delay(10);// delay added so there is a break between rotating and moving straight.
@@ -170,6 +170,7 @@ void angleRotation(float givenAngle){
 
 }
 void moveStraight(int feet){
+  Kp=.2;
   dDistance=desiredDistance[feet]; // this is in meters
   desiredAngle = dDistance/0.05; // 0.05m is equivalent to 1 rad
   
