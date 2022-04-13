@@ -32,22 +32,6 @@ from picamera import PiCamera
 ##camera.awb_gains = g
 ##camera.capture_sequence(['image%02d.jpg' % i for i in range(10)])
 
-
-# sets up the lcd size
-lcd_columns = 16
-lcd_rows = 2
-
-# Initialise I2C bus.
-i2c = board.I2C()
-
-# Initialise the LCD class
-lcd = character_lcd.Character_LCD_RGB_I2C(i2c, lcd_columns, lcd_rows)
-
-#ready the lcd
-lcd.clear()
-lcd.color = [100, 0, 100]
-
-
 #Set address
 ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
 ser.reset_input_buffer()
@@ -101,9 +85,7 @@ def find_quadrant():
 ##                        cv.imshow('image', image_copy)
 ##                        cv.waitKey(0)
 ##                        cv.destroyAllWindows()
-                        lcd.clear()
         if abs(angle)<10:
-                lcd.message = "foward"
                 mode='B'
                 tape="1"
                 if(cYMinInt>1060):
@@ -114,7 +96,6 @@ def find_quadrant():
                 
 
         elif (cX == 0 and cY == 0) or cv.contourArea(contour) < 5000:  #alerts to the marker not being found
-            lcd.message = "No markers found"
             angle=50
             mode='A'
             return '0.00'
@@ -125,7 +106,6 @@ def find_quadrant():
                 angle=(60/2)*((cX-960)/(1920-960))
                 rounded= round(angle, 2)
                 send=str(rounded)
-                lcd.message = send
                 return send
         
 #sets up a funtion that can read the arduino. used for debugging
@@ -144,7 +124,7 @@ while True:
         elif (tape=="1"):
                 send=find_quadrant()
                 ser.write(mode.encode())
-                time.sleep(3)
+                time.sleep(2)
                 line = ser.readline().decode('utf-8').rstrip()
                 print(line)
                         
