@@ -84,7 +84,7 @@ void loop() {
     }
     if (mode=="C"){
       Kp = .2;
-      moveStraight(1);
+     // moveStraight(1);
      Serial.println("working");
     }
       
